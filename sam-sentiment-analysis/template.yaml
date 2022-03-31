@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Perform Twitter search and sentimental analysis
+Globals:
+  Function:
+    Timeout: 15
+
+Metadata:
+  AWS::CloudFormation::Interface:
+   ParameterGroups:
+     - Label: {default: 'Optional parameters'}
+       Parameters:
+         - ProjectName
+         - TwitterToken
+
+Parameters:
+  ProjectName:
+   Type: String
+   Description: 'Name of the project'
+   Default: 'sam-sentiment-analysis'
+
+  TwitterToken:
+   Type: String
+   Description: 'The token to execute twitter api'
+   Default: 'twitter_token'
+     
+Resources:
+  # Define Topic
+  SentimentAnalysisTopic:
+   Type: AWS::SNS::Topic
+   Properties:
+     TopicName: !Sub '${ProjectName}'
+     # Need to remove this subscription section on first creation.
+     Subscription:
+       - Protocol: sqs
+         Endpoint: !GetAtt SentimentAnalysisQueue.Arn
+     Tags:
+       - Key: Name
+         Value: !Sub '${ProjectName}'
+   
+  # Define the SQS queue
+  SentimentAnalysisQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${ProjectName}'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}'
+
+  # Define SNS to SQS Policy
+  SnsToSqsPolicy:
+    Type: AWS::SQS::QueuePolicy      
+    Properties:    
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "Allow SNS publish to SQS"
+            Effect: Allow
+            Principal: 
+              Service: "sns.amazonaws.com"
+            Resource: !GetAtt SentimentAnalysisQueue.Arn
+            Action: SQS:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref SentimentAnalysisTopic
+      Queues:
+        - Ref: SentimentAnalysisQueue
+
+  # Define the Lambda
+  SentimentAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}'
+      CodeUri: process/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Policies:
+        - ComprehendFullAccess
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          BEARER_TOKEN: !Sub '${TwitterToken}'
+      Architectures:
+        - x86_64
+      Events:
+        SqsTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SentimentAnalysisQueue.Arn
+
+  # Define the Dynamo DB
+  SentimentAnalysisTable: 
+    Type: AWS::Serverless::SimpleTable 
+    Properties: 
+        PrimaryKey: 
+          Name: symbol 
+          Type: String 
+        ProvisionedThroughput: 
+          ReadCapacityUnits: 5 
+          WriteCapacityUnits: 5 
+
+Outputs:
+  SentimentAnalysisQueue:
+    Description: "Sentiment Analysis Queue ARN"
+    Value: !GetAtt SentimentAnalysisQueue.Arn
+  SentimentAnalysisFunction:
+    Description: "Sentiment Analysis Lambda Function ARN"
+    Value: !GetAtt SentimentAnalysisFunction.Arn
+  SentimentAnalysisFunctionIamRole:
+    Description: "IAM Role created for Sentiment Analysis function"
+    Value: !GetAtt SentimentAnalysisFunctionRole.Arn
