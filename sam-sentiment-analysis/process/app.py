@@ -1,14 +1,16 @@
+import os
 import json
-from pathlib import Path
 import requests
 import preprocessor as p
-import os
-
-import json
 import logging
-from pprint import pprint
 import boto3
+
 from botocore.exceptions import ClientError
+from datetime import datetime
+from decimal import Decimal
+
+
+dynamodb = boto3.resource('dynamodb')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -45,15 +47,26 @@ def lambda_handler(event, context):
     # Log the sentiment response
     logger.info(sentiment)
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "result": sentiment['SentimentScore']
-        }),
-    }
+    # Write to DynamoDB
+    table = dynamodb.Table('sam-sentiment-analysis-SentimentAnalysisTable-1T0DIZV7P512G')
 
-    # return "OK"
+    data = {
+            'symbol': symbol,
+            'sentiment' : {
+                'comment' : sentiment['Sentiment'],
+                'positive' : Decimal(str(sentiment['SentimentScore']['Positive'])),
+                'negative' : Decimal(str(sentiment['SentimentScore']['Negative'])),
+                'neutral' : Decimal(str(sentiment['SentimentScore']['Neutral'])),
+                'mixed' : Decimal(str(sentiment['SentimentScore']['Mixed']))
+            },
+            'twitter' : json_response["data"],
+            "timestamp" : str(datetime.now())
+        }
 
+    # Insert / Update to the database
+    response = table.put_item(Item=data)
+
+    return "OK"
 
 class TwitterFetch:
     """
