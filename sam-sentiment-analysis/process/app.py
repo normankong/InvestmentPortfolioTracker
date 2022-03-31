@@ -48,7 +48,8 @@ def lambda_handler(event, context):
     logger.info(sentiment)
 
     # Write to DynamoDB
-    table = dynamodb.Table('sam-sentiment-analysis-SentimentAnalysisTable-1T0DIZV7P512G')
+    tableName = os.environ.get("TABLE_NAME")
+    table = dynamodb.Table(tableName)
 
     data = {
             'symbol': symbol,

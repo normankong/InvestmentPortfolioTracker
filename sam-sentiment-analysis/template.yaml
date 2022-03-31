@@ -80,6 +80,7 @@ Resources:
       Environment:
         Variables:
           BEARER_TOKEN: !Sub '${TwitterToken}'
+          TABLE_NAME: !Select [1, !Split ['/', !GetAtt SentimentAnalysisTable.Arn]]
       Architectures:
         - x86_64
       Events:
