@@ -45,7 +45,7 @@ def lambda_handler(event, context):
     sentiment = comp_detect.detect_sentiment(buffer, 'en')
 
     # Log the sentiment response
-    logger.info(sentiment)
+    logger.info("Sentiment Output " , sentiment)
 
     # Write to DynamoDB
     tableName = os.environ.get("TABLE_NAME")

@@ -17,7 +17,7 @@ Parameters:
   ProjectName:
    Type: String
    Description: 'Name of the project'
-   Default: 'sam-sentiment-analysis'
+   Default: 'sam-sentiment'
 
   TwitterToken:
    Type: String
@@ -30,7 +30,6 @@ Resources:
    Type: AWS::SNS::Topic
    Properties:
      TopicName: !Sub '${ProjectName}'
-     # Need to remove this subscription section on first creation.
      Subscription:
        - Protocol: sqs
          Endpoint: !GetAtt SentimentAnalysisQueue.Arn
@@ -70,7 +69,7 @@ Resources:
   SentimentAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub '${ProjectName}'
+      FunctionName: !Sub '${ProjectName}-analysis'
       CodeUri: process/
       Handler: app.lambda_handler
       Runtime: python3.9
@@ -80,7 +79,7 @@ Resources:
       Environment:
         Variables:
           BEARER_TOKEN: !Sub '${TwitterToken}'
-          TABLE_NAME: !Select [1, !Split ['/', !GetAtt SentimentAnalysisTable.Arn]]
+          TABLE_NAME: !Select [1, !Split ['/', !GetAtt SentimentTable.Arn]]
       Architectures:
         - x86_64
       Events:
@@ -90,7 +89,7 @@ Resources:
             Queue: !GetAtt SentimentAnalysisQueue.Arn
 
   # Define the Dynamo DB
-  SentimentAnalysisTable: 
+  SentimentTable: 
     Type: AWS::Serverless::SimpleTable 
     Properties: 
         PrimaryKey: 
@@ -110,3 +109,6 @@ Outputs:
   SentimentAnalysisFunctionIamRole:
     Description: "IAM Role created for Sentiment Analysis function"
     Value: !GetAtt SentimentAnalysisFunctionRole.Arn
+  SentimentTable:
+    Description: "Sentiment Table"
+    Value:  !Select [1, !Split ['/', !GetAtt SentimentTable.Arn]]
