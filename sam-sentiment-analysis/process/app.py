@@ -14,6 +14,10 @@ dynamodb = boto3.resource('dynamodb')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Get the Information from the Environment Variable
+TABLE_NAME = os.environ.get("TABLE_NAME")
+BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
+
 def lambda_handler(event, context):
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -35,7 +39,9 @@ def lambda_handler(event, context):
     response = json.dumps(json_response, indent=4, sort_keys=True)
     logger.info(response)
 
-    if data in json_response:
+    # Write to DynamoDB
+    table = dynamodb.Table(TABLE_NAME)
+    if "data" not in json_response:
         logger.info("No tweets found for symbol: " + symbol)
 
         data = {
@@ -51,10 +57,11 @@ def lambda_handler(event, context):
                 "timestamp" : str(datetime.now())
             }
 
-        # Insert / Update to the database
+        # Update to the database
         response = table.put_item(Item=data)
         return "No tweets found for symbol: " + symbol
 
+    # Clean up Twitter Information before sending to Comprehend
     buffer = ""
     for x in json_response["data"]:
         buffer += (p.clean(x["text"]))
@@ -67,9 +74,6 @@ def lambda_handler(event, context):
     logger.info("Sentiment Output " , sentiment)
 
     # Write to DynamoDB
-    tableName = os.environ.get("TABLE_NAME")
-    table = dynamodb.Table(tableName)
-
     data = {
             'symbol': symbol,
             'sentiment' : {
@@ -83,7 +87,7 @@ def lambda_handler(event, context):
             "timestamp" : str(datetime.now())
         }
 
-    # Insert / Update to the database
+    # Update to the database
     response = table.put_item(Item=data)
 
     return sentiment['Sentiment']
@@ -94,7 +98,7 @@ class TwitterFetch:
     """
     def __init__(self):
 
-        self.bearer_token = os.environ.get("BEARER_TOKEN")
+        self.bearer_token = BEARER_TOKEN
 
         self.search_url = "https://api.twitter.com/2/tweets/search/recent"
 
@@ -102,7 +106,6 @@ class TwitterFetch:
         """
         Method required by bearer token authentication.
         """
-
         r.headers["Authorization"] = f"Bearer {self.bearer_token}"
         r.headers["User-Agent"] = "v2RecentSearchPython"
         return r
