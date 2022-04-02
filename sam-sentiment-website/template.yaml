@@ -78,3 +78,6 @@ Outputs:
   BucketName:
     Value: !Ref S3Bucket
     Description: Create S3 Bucket
+  DistributionName:
+    Value: !GetAtt CloudfrontDistribution.DomainName
+    Description: Domain Name

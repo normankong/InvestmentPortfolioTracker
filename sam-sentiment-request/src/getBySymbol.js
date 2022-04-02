@@ -19,18 +19,22 @@ exports.handler = async (event) => {
   console.info(`symbol: ${symbol}`);
 
   // Get the item from the table
-  var params = {
+  var getRequest = {
     TableName: tableName,
     Key: { symbol },
   };
-  const data = await docClient.get(params).promise();
+  const data = await docClient.get(getRequest).promise();
   let item = data.Item;
 
   if (item === undefined) {
-    await docClient.put(params).promise();
+    var putRequest = {
+      TableName: tableName,
+      Item: { symbol : symbol },
+    };
+    await docClient.put(putRequest).promise();
     item = { responseCode : "404", message: "No data found, start polling" };
   }
-  else if (item.sentiment === undefined)
+  else if (item.sentiment === undefined){
     item = { responseCode : "405", message: "Polling in progress" };
   }
 

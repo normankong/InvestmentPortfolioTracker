@@ -90,14 +90,22 @@ Resources:
 
   # Define the Dynamo DB
   SentimentTable: 
-    Type: AWS::Serverless::SimpleTable 
+    Type: AWS::DynamoDB::Table
     Properties: 
-        PrimaryKey: 
-          Name: symbol 
-          Type: String 
-        ProvisionedThroughput: 
-          ReadCapacityUnits: 5 
-          WriteCapacityUnits: 5 
+      AttributeDefinitions: 
+        - AttributeName: symbol
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: symbol
+          KeyType: HASH
+      # PrimaryKey: 
+      #   Name: symbol 
+      #   Type: String 
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5 
+        WriteCapacityUnits: 5 
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
 Outputs:
   SentimentAnalysisQueue:

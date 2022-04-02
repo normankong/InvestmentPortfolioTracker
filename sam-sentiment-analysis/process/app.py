@@ -9,7 +9,6 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 from decimal import Decimal
 
-
 dynamodb = boto3.resource('dynamodb')
 
 logger = logging.getLogger(__name__)
