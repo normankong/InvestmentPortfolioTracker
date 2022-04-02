@@ -39,7 +39,8 @@ Resources:
     Properties:
       FunctionName: !Sub '${ProjectName}-request'
       Description: Get the Symbol information, trigger extraction if not found
-      Handler: src/getBySymbol.handler
+      CodeUri: src
+      Handler: process.handler
       Runtime: nodejs14.x
       Architectures:
         - x86_64
