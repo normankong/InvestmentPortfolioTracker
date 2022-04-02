@@ -35,6 +35,26 @@ def lambda_handler(event, context):
     response = json.dumps(json_response, indent=4, sort_keys=True)
     logger.info(response)
 
+    if data in json_response:
+        logger.info("No tweets found for symbol: " + symbol)
+
+        data = {
+                'symbol': symbol,
+                'sentiment' : {
+                    'comment' : "N/A",
+                    'positive' : 0,
+                    'negative' : 0,
+                    'neutral' : 0,
+                    'mixed' : 0
+                },
+                'twitter' : [],
+                "timestamp" : str(datetime.now())
+            }
+
+        # Insert / Update to the database
+        response = table.put_item(Item=data)
+        return "No tweets found for symbol: " + symbol
+
     buffer = ""
     for x in json_response["data"]:
         buffer += (p.clean(x["text"]))
@@ -66,7 +86,7 @@ def lambda_handler(event, context):
     # Insert / Update to the database
     response = table.put_item(Item=data)
 
-    return "OK"
+    return sentiment['Sentiment']
 
 class TwitterFetch:
     """
