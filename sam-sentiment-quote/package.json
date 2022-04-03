@@ -4,7 +4,6 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "axios": "^0.26.1",
         "node-fetch": "^2.6.7"
     },
     "devDependencies": {
