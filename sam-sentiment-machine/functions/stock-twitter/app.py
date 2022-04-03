@@ -18,17 +18,18 @@ logger.setLevel(logging.INFO)
 TABLE_NAME = os.environ.get("TABLE_NAME")
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
-def lambda_handler(event, context):
+def handler(event, context):
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
     logger.info(event)
 
-    body = event['Records'][0]['body']
-    message = json.loads(body)
-    logger.info(message)
+    # body = event['Records'][0]['body']
+    # message = json.loads(body)
+    # logger.info(message)
 
-    symbol = message['Message']
+    # symbol = message['Message']
+    symbol = event["Message"]
     logger.info(f'Received symbol: {symbol}')
 
     # Trigger twitter API

@@ -1,0 +1,59 @@
+{
+    "Comment": "Stock Analysis State Machine",
+    "StartAt": "Parallel",
+    "States": {
+      "Parallel": {
+        "Type": "Parallel",
+        "End": true,
+        "Branches": [
+          {
+            "StartAt": "Fundamental Analysis",
+            "States": {
+              "Fundamental Analysis": {
+                "Type": "Task",
+                "Resource": "${StockQuoteFunction}",
+                "OutputPath": "$.Payload",
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                  }
+                ],
+                "End": true
+              }
+            }
+          },
+          {
+            "StartAt": "Sentiment Analysis",
+            "States": {
+              "Sentiment Analysis": {
+                "Type": "Task",
+                "Resource": "${StockTwitterFunction}",
+                "OutputPath": "$.Payload",
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                  }
+                ],
+                "End": true
+              }
+            }
+          }
+        ]
+      }
+    },
+    "TimeoutSeconds": 600
+  }

@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Stock Analysis Step Function
+
+Globals:
+  Function:
+    Timeout: 15
+
+Metadata:
+  AWS::CloudFormation::Interface:
+   ParameterGroups:
+     - Label: {default: 'Optional parameters'}
+       Parameters:
+         - ProjectName
+         - TwitterToken
+         - TableName
+         - AlphaVantageAPIKey
+         - QueueARN
+
+Parameters:
+  ProjectName:
+   Type: String
+   Description: 'Name of the project'
+   Default: 'sam-sentiment'
+
+  TwitterToken:
+   Type: String
+   Description: 'The twitter API Bearer Token'
+
+  TableName:
+   Type: String
+   Description: 'The table name for storing result'
+
+  AlphaVantageAPIKey:
+    Type: String
+    Description: 'The Alpha Vantage API Key'
+
+  QueueARN:
+    Type: String
+    Description : 'Please input the Queue ARN'
+
+Resources:
+
+  StockAnalysisStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/analysis.asl.json
+      DefinitionSubstitutions:
+        StockQuoteFunction: !GetAtt StockQuoteFunction.Arn
+        StockTwitterFunction: !GetAtt StockTwitterFunction.Arn
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StockQuoteFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StockTwitterFunction
+
+  StockQuoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-quote'
+      Description: Get the Stock Quote
+      Handler: functions/stock-quote/app.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${TableName}'
+      Environment:
+        Variables:
+          TABLE_NAME: !Sub '${TableName}'
+          ALPHAVANTAGE_API_KEY: !Sub '${AlphaVantageAPIKey}'
+
+  StockTwitterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-twitter'
+      Description: Get the Stock Twitter Analysis
+      CodeUri: functions/stock-twitter/
+      Handler: app.handler
+      Runtime: python3.9
+      Policies:
+        - ComprehendFullAccess
+        - AmazonDynamoDBFullAccess
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          BEARER_TOKEN: !Sub '${TwitterToken}'
+          TABLE_NAME: !Sub '${TableName}'
+
+  # Trigger Step Function
+  TriggerStepFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-step'
+      Description: Trigger Step Function
+      Handler: functions/stock-handler/app.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 15
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt StockAnalysisStateMachine.Name
+      Environment:
+        Variables:
+          MACHINE_ARN: !Ref StockAnalysisStateMachine
+      Events:
+        SqsTrigger:
+          Type: SQS
+          Properties:
+            Queue : !Sub '${QueueARN}'
+
+Outputs:
+  StockAnalysisStateMachineArn:
+    Description: "State machine ARN"
+    Value: !Ref StockAnalysisStateMachine
+  StockAnalysisStateMachineRole:
+    Description: "IAM Role created for state machine based on the specified SAM Policy Templates"
+    Value: !GetAtt StockAnalysisStateMachineRole.Arn
