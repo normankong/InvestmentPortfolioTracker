@@ -98,9 +98,6 @@ Resources:
       KeySchema: 
         - AttributeName: symbol
           KeyType: HASH
-      # PrimaryKey: 
-      #   Name: symbol 
-      #   Type: String 
       ProvisionedThroughput: 
         ReadCapacityUnits: 5 
         WriteCapacityUnits: 5 

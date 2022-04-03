@@ -1,0 +1,16 @@
+{
+    "name": "sam-sentiment-quote",
+    "description": "SAM program to retrieve Stock quote",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "axios": "^0.26.1",
+        "node-fetch": "^2.6.7"
+    },
+    "devDependencies": {
+        "jest": "^26.6.3"
+    },
+    "scripts": {
+        "test": "jest"
+    }
+}
