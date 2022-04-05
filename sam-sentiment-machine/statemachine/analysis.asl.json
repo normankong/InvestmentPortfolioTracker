@@ -30,6 +30,29 @@
             }
           },
           {
+            "StartAt": "Historical Analysis",
+            "States": {
+              "Historical Analysis": {
+                "Type": "Task",
+                "Resource": "${StockHistoryFunction}",
+                "OutputPath": "$.Payload",
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                  }
+                ],
+                "End": true
+              }
+            }
+          },
+          {
             "StartAt": "Sentiment Analysis",
             "States": {
               "Sentiment Analysis": {

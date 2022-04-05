@@ -13,7 +13,7 @@ exports.handler = async (event) => {
   console.log(event);
 
   let symbol = event.Message;
-  let url = `https://alpha-vantage.p.rapidapi.com/query?function=GLOBAL_QUOTE&symbol=${symbol}&datatype=json`;
+  let url = `https://alpha-vantage.p.rapidapi.com/query?function=TIME_SERIES_DAILY&symbol=${symbol}&datatype=json`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -23,13 +23,12 @@ exports.handler = async (event) => {
     },
   });
   const quote = await response.json();
-
   console.log(quote);
 
   var params = {
     TableName: TABLE_NAME,
     Key: { symbol : symbol },
-    UpdateExpression: "set quote = :r",
+    UpdateExpression: "set daily = :r",
     ExpressionAttributeValues: {
       ":r": quote
     },

@@ -47,12 +47,15 @@ Resources:
       DefinitionUri: statemachine/analysis.asl.json
       DefinitionSubstitutions:
         StockQuoteFunction: !GetAtt StockQuoteFunction.Arn
+        StockHistoryFunction: !GetAtt StockHistoryFunction.Arn      
         StockTwitterFunction: !GetAtt StockTwitterFunction.Arn
       Policies: 
         - LambdaInvokePolicy:
             FunctionName: !Ref StockQuoteFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref StockTwitterFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StockHistoryFunction
 
   StockQuoteFunction:
     Type: AWS::Serverless::Function
@@ -60,6 +63,25 @@ Resources:
       FunctionName: !Sub '${ProjectName}-quote'
       Description: Get the Stock Quote
       Handler: functions/stock-quote/app.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub '${TableName}'
+      Environment:
+        Variables:
+          TABLE_NAME: !Sub '${TableName}'
+          ALPHAVANTAGE_API_KEY: !Sub '${AlphaVantageAPIKey}'
+
+  StockHistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-history'
+      Description: Get the Stock History
+      Handler: functions/stock-history/app.handler
       Runtime: nodejs14.x
       Architectures:
         - x86_64

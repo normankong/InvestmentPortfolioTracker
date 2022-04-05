@@ -56,6 +56,28 @@ Resources:
       Queues:
         - Ref: SentimentAnalysisQueue
 
+  ProcessDynamoDBStream:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-stream'
+      Handler: src/app.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      Policies: 
+        - AWSLambdaBasicExecutionRole
+        - AmazonSNSFullAccess
+      Environment:
+        Variables:
+          TOPIC: !Ref SentimentAnalysisTopic
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt SentimentTable.StreamArn
+            BatchSize: 100
+            StartingPosition: TRIM_HORIZON
+
   # Define the Dynamo DB
   SentimentTable: 
     Type: AWS::DynamoDB::Table
