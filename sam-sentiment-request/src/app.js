@@ -1,5 +1,5 @@
 // Get the DynamoDB table name from environment variables
-const tableName = process.env.TABLE_NAME;
+const TABLE_NAME = process.env.TABLE_NAME;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require("aws-sdk/clients/dynamodb");
@@ -29,7 +29,7 @@ exports.handler = async (event) => {
 
   // Get the item from the table
   var getRequest = {
-    TableName: tableName,
+    TableName: TABLE_NAME,
     Key: { symbol },
   };
   const data = await docClient.get(getRequest).promise();
@@ -37,14 +37,14 @@ exports.handler = async (event) => {
 
   if (item === undefined) {
     var putRequest = {
-      TableName: tableName,
+      TableName: TABLE_NAME,
       Item: { symbol : symbol },
     };
     await docClient.put(putRequest).promise();
     item = { responseCode : "404", message: "No data found, start polling" };
   }
   else if (item.sentiment === undefined){
-    item = { responseCode : "405", message: "Polling in progress" };
+    // item = { responseCode : "405", message: "Polling in progress" };
   }
 
   const response = {
