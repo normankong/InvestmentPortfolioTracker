@@ -5,7 +5,7 @@
 docker build -t my_ecr .
 
 # Test Docker
-docker run -it -p 80:80 -p  my_ecr
+docker run -it -p 80:80 my_ecr
 
 aws ecr create-repository --repository-name my_ecr 
 aws ecr describe-repositories --repository-names my_ecr | jq -r '. | .repositories[0].repositoryUri' 
@@ -44,6 +44,9 @@ aws ec2 describe-subnets | jq '.Subnets[] |  .SubnetId' -r
 SECURITY_GROUP=`aws ec2 describe-security-groups | jq '.SecurityGroups[0].GroupId' -r`
 
 
-#Domain Name
+# Domain Name
 aws cloudfront list-distributions | jq '.DistributionList.Items[0].DomainName' -r
 aws cloudfront list-distributions | jq '.DistributionList.Items[0].Id' -r
+
+# Export 
+aws ecs describe-task-definition --task-definition MyargateTask:1

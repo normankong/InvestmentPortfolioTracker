@@ -52,5 +52,5 @@ DISTRIBUTION_ID=`aws cloudfront list-distributions | jq '.DistributionList.Items
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
 # Web Socket
-# cd ../sam-sentiment-socket
-# sam deploy --stack-name sam-sentiment-socket  --guided
+cd ../sam-sentiment-socket
+sam deploy --stack-name sam-sentiment-socket  
