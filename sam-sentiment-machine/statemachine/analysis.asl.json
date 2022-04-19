@@ -12,7 +12,7 @@
               "Fundamental Analysis": {
                 "Type": "Task",
                 "Resource": "${StockQuoteFunction}",
-                "OutputPath": "$.Payload",
+
                 "Retry": [
                   {
                     "ErrorEquals": [
@@ -35,7 +35,7 @@
               "Historical Analysis": {
                 "Type": "Task",
                 "Resource": "${StockHistoryFunction}",
-                "OutputPath": "$.Payload",
+
                 "Retry": [
                   {
                     "ErrorEquals": [
@@ -53,12 +53,33 @@
             }
           },
           {
-            "StartAt": "Sentiment Analysis",
+            "StartAt": "Twitter Extraction",
             "States": {
-              "Sentiment Analysis": {
+              "Twitter Extraction": {
                 "Type": "Task",
                 "Resource": "${StockTwitterFunction}",
-                "OutputPath": "$.Payload",
+
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                  }
+                ],
+                "Next": "Sentiment Analysis"
+              },
+              "Sentiment Analysis": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::lambda:invoke",
+                "Parameters": {
+                  "Payload.$": "$",
+                  "FunctionName": "${StockSentimentFunction}"
+                },
                 "Retry": [
                   {
                     "ErrorEquals": [

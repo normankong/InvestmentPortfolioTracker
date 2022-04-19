@@ -1,3 +1,5 @@
+const moment = require("moment");
+
 // Get the DynamoDB table name from environment variables
 const TABLE_NAME = process.env.TABLE_NAME;
 
@@ -21,11 +23,10 @@ exports.handler = async (event) => {
   if (/^[a-zA-Z]{1,4}$/.test(symbol) === false) {
     const response = {
       statusCode: 403,
-      body: "Invalid Stock Symbol"
+      body: "Invalid Stock Symbol",
     };
     return response;
   }
-
 
   // Get the item from the table
   var getRequest = {
@@ -36,15 +37,23 @@ exports.handler = async (event) => {
   let item = data.Item;
 
   if (item === undefined) {
-    var putRequest = {
-      TableName: TABLE_NAME,
-      Item: { symbol : symbol },
-    };
-    await docClient.put(putRequest).promise();
-    item = { responseCode : "404", message: "No data found, start polling" };
-  }
-  else if (item.sentiment === undefined){
-    // item = { responseCode : "405", message: "Polling in progress" };
+
+    await createRecord(symbol);
+    item = { message: "Start polling" };
+
+  } else {
+
+    let expiryTime = moment(item.createTimestamp).add(1, "minutes");
+    console.log(`Expiry Time ${expiryTime}`);
+
+    if (moment().isAfter(expiryTime)) {
+      
+      await deleteRecord(symbol);
+
+      await createRecord(symbol);
+
+      item = { message: "Refreshing Record" };
+    }
   }
 
   const response = {
@@ -56,4 +65,26 @@ exports.handler = async (event) => {
     `response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`
   );
   return response;
+};
+
+const createRecord = async (symbol) => {
+  console.log(`Creating : ${symbol}`);
+
+  let now = moment().format("YYYY-MM-DD HH:mm:ss");
+  var putRequest = {
+    TableName: TABLE_NAME,
+    Item: { symbol, createTimestamp: now },
+  };
+  await docClient.put(putRequest).promise();
+};
+
+const deleteRecord = async (symbol) => {
+  console.log(`Deleting : ${symbol}`);
+
+  await docClient
+    .delete({
+      TableName: TABLE_NAME,
+      Key: { symbol },
+    })
+    .promise();
 };

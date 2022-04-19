@@ -8,3 +8,4 @@ secret.md
 samconfig.toml
 env.json
 .aws-sam
+node_modules/

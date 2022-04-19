@@ -1,6 +1,6 @@
 {
-    "name": "sam-sentiment-machine",
-    "description": "Lambda to get the stock quote",
+    "name": "sam-sentiment-socket",
+    "description": "WebSocket server for sentiment analysis",
     "version": "0.0.1",
     "private": true,
     "dependencies": {

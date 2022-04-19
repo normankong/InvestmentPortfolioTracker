@@ -49,6 +49,7 @@ Resources:
         StockQuoteFunction: !GetAtt StockQuoteFunction.Arn
         StockHistoryFunction: !GetAtt StockHistoryFunction.Arn      
         StockTwitterFunction: !GetAtt StockTwitterFunction.Arn
+        StockSentimentFunction: !GetAtt StockSentimentFunction.Arn
       Policies: 
         - LambdaInvokePolicy:
             FunctionName: !Ref StockQuoteFunction
@@ -56,6 +57,8 @@ Resources:
             FunctionName: !Ref StockTwitterFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref StockHistoryFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StockSentimentFunction
 
   StockQuoteFunction:
     Type: AWS::Serverless::Function
@@ -111,6 +114,25 @@ Resources:
       Environment:
         Variables:
           BEARER_TOKEN: !Sub '${TwitterToken}'
+          TABLE_NAME: !Sub '${TableName}'
+
+
+
+  StockSentimentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-sentiment'
+      Description: Get the Stock Sentiment Analysis
+      CodeUri: functions/stock-sentiment/
+      Handler: app.handler
+      Runtime: python3.9
+      Policies:
+        - ComprehendFullAccess
+        - AmazonDynamoDBFullAccess
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
           TABLE_NAME: !Sub '${TableName}'
 
   # Trigger Step Function

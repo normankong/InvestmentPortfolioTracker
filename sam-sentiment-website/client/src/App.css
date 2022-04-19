@@ -1,0 +1,8 @@
+.header {
+  text-align: center;
+}
+
+.body {
+  overflow-y: scroll;
+  margin-bottom: 80px;
+}

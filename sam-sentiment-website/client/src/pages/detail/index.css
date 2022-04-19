@@ -1,0 +1,9 @@
+.chart {
+  width: 800px;
+  overflow: hidden;
+  background-color: white;
+}
+
+.button {
+  margin: 5px;
+}

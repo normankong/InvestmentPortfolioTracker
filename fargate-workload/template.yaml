@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless patterns - API Gateway to Private HTTP Endpoint
+
+# Parameters to input VPC id and private subnet ids where the ECS cluster and Application Load Balancer will be created.
+# Parameters:
+#   VpcId:
+#     Type: AWS::EC2::VPC::Id
+#   PrivateSubnetIds:
+#     Type: List<AWS::EC2::Subnet::Id>
+
+Metadata:
+  AWS::CloudFormation::Interface:
+   ParameterGroups:
+     - Label: {default: 'Optional parameters'}
+       Parameters:
+         - ECRImageURL
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: 'Name of the project'
+    Default: 'sam-sentiment-fargate'
+  ECRImageURL:
+    Type: String
+    Description: 'ECR Image URL'
+
+Resources:
+
+  # Create the ECS Cluster
+  ECSFargateCluster:
+    Type: 'AWS::ECS::Cluster'
+
+  # Create the ECS Service task definition. 
+  # ECSServiceTaskDefinition:
+  #   Type: 'AWS::ECS::TaskDefinition'
+  #   Properties:
+  #     ContainerDefinitions:
+  #       - Essential: true
+  #         Image: !Sub '${ECRImageURL}'
+  #         Name: web
+  #         PortMappings:
+  #           - ContainerPort: 80
+  #             Protocol: tcp
+  #           - ContainerPort: 10001
+  #             Protocol: tcp
+  #     Cpu: '512'
+  #     ExecutionRoleArn: !GetAtt 
+  #       - ECSTaskExecutionRole
+  #       - Arn
+  #     Memory: '1024'
+  #     NetworkMode: awsvpc
+  #     RequiresCompatibilities:
+  #       - FARGATE
+  #     TaskRoleArn: !GetAtt 
+  #       - ECSTaskRole
+  #       - Arn
+
+  # ECS Task Execution Role
+  # ECSTaskExecutionRole:
+  #   Type: 'AWS::IAM::Role'
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #         - Action: 'sts:AssumeRole'
+  #           Effect: Allow
+  #           Principal:
+  #             Service: ecs-tasks.amazonaws.com
+  #       Version: 2012-10-17
+  # AmazonECSTaskExecutionRolePolicy
+  # ECS Task Role
+  ECSTaskRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+
+
+
+  # # Create ECS Service
+  # ECSService:
+  #   Type: 'AWS::ECS::Service'
+  #   Properties:
+  #     Cluster: !Ref ECSFargateCluster
+  #     DeploymentConfiguration:
+  #       MaximumPercent: 200
+  #       MinimumHealthyPercent: 50
+  #     DesiredCount: 1
+  #     EnableECSManagedTags: false
+  #     LaunchType: FARGATE
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: ENABLED
+  #         SecurityGroups: !Split [",", !FindInMap [ Env2SecurityGroups, !Ref AWS::AccountId, securitygroup] ]
+  #         Subnets: !Split [",", !FindInMap [ Env2PublicSubnets, !Ref AWS::AccountId, subnets] ]
+  #         # - "subnet-06812822e0cdc268b"
+  #         # - "subnet-0852344162d6022fe"
+  #         # - "subnet-09b095b91a6801dfa"
+  #         # - "subnet-0c9e4c7be413fa55f"
+  #         # - "subnet-0bac751c7c699fa67"
+  #         # - "subnet-0a45b3ef47692b100"
+  #     TaskDefinition: !Ref ECSServiceTaskDefinition
+
+  # Mappings:
+  #   Env2PublicSubnets:
+  #     '096961528614':
+  #       subnets: "subnet-020a0b96a6ae3b86a,subnet-0483b4e3acb9d9b67,subnet-02c9cdc42dc3743f7,subnet-070baf3fbb3de6fd1,subnet-0e2c3d0b84c3b666c,subnet-0e476e5dc1b26fdd5"
+  #   Env2SecurityGroups:
+  #     '096961528614':
+  #       securitygroup: 'sg-0d68a1c6c8a6bea28'
