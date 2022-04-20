@@ -19,6 +19,84 @@ Parameters:
 
 Resources:
 
+  # Define Topic
+  SentimentSubscriptionTopic:
+   Type: AWS::SNS::Topic
+   Properties:
+     TopicName: !Sub '${ProjectName}'
+     Subscription:
+       - Protocol: sqs
+         Endpoint: !GetAtt SentimentSubscriptionQueue.Arn
+     Tags:
+       - Key: Name
+         Value: !Sub '${ProjectName}'
+
+  # Define the SQS queue
+  SentimentSubscriptionQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${ProjectName}'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}'
+
+  # Define SNS to SQS Policy
+  SnsToSqsPolicy:
+    Type: AWS::SQS::QueuePolicy      
+    Properties:    
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "Allow SNS publish to SQS"
+            Effect: Allow
+            Principal: 
+              Service: "sns.amazonaws.com"
+            Resource: !GetAtt SentimentSubscriptionQueue.Arn
+            Action: SQS:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref SentimentSubscriptionTopic
+      Queues:
+        - Ref: SentimentSubscriptionQueue
+
+  # # Define SNS to SQS Policy
+  # SnsToSqsPolicy:
+  #   Type: AWS::SQS::QueuePolicy      
+  #   Properties:    
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: "Allow SNS publish to SQS"
+  #           Effect: Allow
+  #           Principal: 
+  #             Service: "sns.amazonaws.com"
+  #           Resource: !GetAtt SentimentAnalysisQueue.Arn
+  #           Action: SQS:SendMessage
+  #           Condition:
+  #             ArnEquals:
+  #               aws:SourceArn: !Ref SentimentAnalysisTopic
+  #     Queues:
+  #       - Ref: SentimentAnalysisQueue
+
+  # # Define Lambda to SQS Policy
+  # LambdaToSqsPolicy:
+  #   Type: AWS::SQS::QueuePolicy      
+  #   Properties:    
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: "Allow Lambda publish to SQS"
+  #           Effect: Allow
+  #           Principal: 
+  #             Service: "sns.amazonaws.com"
+  #           Resource: !GetAtt SentimentSubscriptionQueue.Arn
+  #           Action: SQS:SendMessage
+  #           Condition:
+  #             ArnEquals:
+  #               aws:SourceArn: !Ref SendMessageFunction
+  #     Queues:
+  #       - Ref: SentimentSubscriptionQueue
+
   SentimentWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -180,15 +258,18 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
+          # QUEUE_URL : !Ref SentimentSubscriptionQueue
+          TOPIC: !Ref SentimentSubscriptionTopic
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SentimentWebSocket}/*'
+        - AmazonSNSFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
+        - Statement:
+          - Effect: Allow
+            Action:
+            - 'execute-api:ManageConnections'
+            Resource:
+            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SentimentWebSocket}/*'
 
   SendMessagePermission:
     Type: AWS::Lambda::Permission
@@ -200,22 +281,26 @@ Resources:
       Principal: apigateway.amazonaws.com
 
 Outputs:
-  ConnectionsTableArn:
-    Description: "Connections table ARN"
-    Value: !GetAtt ConnectionsTable.Arn
+  # OnConnectFunctionArn:
+  #   Description: "OnConnect function ARN"
+  #   Value: !GetAtt OnConnectFunction.Arn
 
-  OnConnectFunctionArn:
-    Description: "OnConnect function ARN"
-    Value: !GetAtt OnConnectFunction.Arn
+  # OnDisconnectFunctionArn:
+  #   Description: "OnDisconnect function ARN"
+  #   Value: !GetAtt OnDisconnectFunction.Arn
 
-  OnDisconnectFunctionArn:
-    Description: "OnDisconnect function ARN"
-    Value: !GetAtt OnDisconnectFunction.Arn
-
-  SendMessageFunctionArn:
-    Description: "SendMessage function ARN"
-    Value: !GetAtt SendMessageFunction.Arn
+  # SendMessageFunctionArn:
+  #   Description: "SendMessage function ARN"
+  #   Value: !GetAtt SendMessageFunction.Arn
 
   WebSocketURI:
     Description: "The WSS Protocol URI to connect to"
     Value: !Join [ '', [ 'wss://', !Ref SentimentWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+
+  ConnectionsTableArn:
+    Description: "Connections table name"
+    Value: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
+
+  SQSqueueURL:
+    Description: SQS queue URL
+    Value: !Ref SentimentSubscriptionQueue

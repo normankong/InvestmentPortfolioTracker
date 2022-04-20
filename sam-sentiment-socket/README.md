@@ -6,6 +6,7 @@ This SAM project is to create a web socket via API Gateway, which take incoming 
 Message Format
 ```
 { "action" : "sendmessage" , "symbol" : "AAPL"}
+{ "action" : "sendmessage" , "symbol" : "BINANCE:BTCUSDT"}
 ```
 
 ## Useful Command
