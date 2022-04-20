@@ -53,4 +53,10 @@ aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/
 
 # Web Socket
 cd ../sam-sentiment-socket
+sam build
 sam deploy --stack-name sam-sentiment-socket  
+
+# Fargate Deployment
+cd ../sam-sentiment-fargate
+sam build
+sam deploy --stack-name sam-sentiment-fargate

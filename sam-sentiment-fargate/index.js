@@ -6,17 +6,20 @@ var expressWs = require('express-ws');
 var expressWs = expressWs(express());
 var app = expressWs.app;
 
-const SocketHelper = require("./utils/socketHelper");
+const AWS = require("aws-sdk");
+AWS.config.update({ region: "us-east-1" });
+
+const APIGatewayHelper = require("./utils/apiGatewayHelper");
+// const SocketHelper = require("./utils/socketHelper");
 const FinHubHelper = require("./utils/finhubHelper");
+const SubscriptionHelper =require("./utils/subscriptionHelper");
 
 let buffer = "";
-let socketHelper = null;
+let apiGatewayHelper = null;
 let finHubHelper = null;
-// const AWS = require("aws-sdk");
-// AWS.config.update({ region: "us-east-1" });
+let subscriptionHelper = null;
 
 const port = process.env.PORT || 80;
-// require("dotenv").config();
 
 app.get("/", (req, res) => {
   res.send(`<pre>${JSON.stringify(buffer, null, 2)}</pre>`);
@@ -40,6 +43,10 @@ app.listen(port, function () {
   console.log(`http://localhost:${port}`);
 
   let ws = expressWs.getWss();
-  socketHelper = new SocketHelper(ws);
-  finHubHelper = new FinHubHelper(socketHelper);
+  // socketHelper = new SocketHelper(ws);
+  apiGatewayHelper = new APIGatewayHelper();
+  finHubHelper = new FinHubHelper(apiGatewayHelper);
+  subscriptionHelper = new SubscriptionHelper(finHubHelper);
+  
 });
+

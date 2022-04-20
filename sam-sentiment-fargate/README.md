@@ -12,17 +12,16 @@ aws ecr describe-repositories --repository-names my_ecr | jq -r '. | .repositori
 
 <!-- aws ecr create-cluster  --cluster-name MyCluster -->
 
-aws ecs create-service \
+<!-- aws ecs create-service \
     --cluster sam-fargate-ECSFargateCluster-0Dm6zjwq05P9 \
     --service-name MyService2 \
     --task-definition sam-fargate-ECSServiceTaskDefinition-4GQwUVLiNHKW:1 \
     --desired-count 1 \
     --launch-type FARGATE \
     --platform-version LATEST \
-    --network-configuration "awsvpcConfiguration={subnets=[subnet-020a0b96a6ae3b86a,subnet-0483b4e3acb9d9b67,subnet-02c9cdc42dc3743f7,subnet-070baf3fbb3de6fd1,subnet-0e2c3d0b84c3b666c,subnet-0e476e5dc1b26fdd5],securityGroups=[sg-0d68a1c6c8a6bea28],assignPublicIp=ENABLED}" 
+    --network-configuration "awsvpcConfiguration={subnets=[subnet-020a0b96a6ae3b86a,subnet-0483b4e3acb9d9b67,subnet-02c9cdc42dc3743f7,subnet-070baf3fbb3de6fd1,subnet-0e2c3d0b84c3b666c,subnet-0e476e5dc1b26fdd5],securityGroups=[sg-0d68a1c6c8a6bea28],assignPublicIp=ENABLED}"  -->
 
-aws ecs register-task-definition --cli-input-json file://skeleton.json
-
+<!-- aws ecs register-task-definition --cli-input-json file://skeleton.json -->
 
 # Create ECR via Console
 aws ecr create-repository --repository-name my_ecr 

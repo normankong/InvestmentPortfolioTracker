@@ -1,4 +1,5 @@
-// const WebSocket = require("ws");
+"use strict";
+
 const uuid = require("uuid");
 class SocketHelper {
 
