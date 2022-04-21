@@ -12,6 +12,14 @@ Description: >-
 Transform:
 - AWS::Serverless-2016-10-31
 
+Globals:
+    Api:
+        Cors:
+            AllowMethods: "'GET,POST,OPTIONS'"
+            AllowHeaders: "'content-type'"
+            AllowOrigin: "'*'"
+            AllowCredentials: false
+
 Metadata:
   AWS::CloudFormation::Interface:
    ParameterGroups:
