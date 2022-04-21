@@ -167,10 +167,14 @@ Resources:
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub '${ProjectName}-connection'
+      Description: WebSocket Connection Handler
       CodeUri: src/connection_handler
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
       Environment:
         Variables:
           TABLE_NAME: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
@@ -190,10 +194,14 @@ Resources:
   OnDisconnectFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub '${ProjectName}-message'
+      Description: WebSocket Message Handler
       CodeUri: src/connection_handler
       Handler: app.handler
       MemorySize: 256
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
       Environment:
         Variables:
           TABLE_NAME: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
@@ -258,3 +266,7 @@ Outputs:
   SQSqueueURL:
     Description: SQS queue URL
     Value: !Ref SentimentSubscriptionQueue
+
+  DomainEndpoint:
+    Description: "API Domain for fargate"
+    Value: !Join [ '', [ !Ref SentimentWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com'] ]
