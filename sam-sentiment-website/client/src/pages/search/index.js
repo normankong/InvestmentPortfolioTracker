@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { InfoCircle } from "react-bootstrap-icons";
 
 import apiHelper from "../../api/apiHelper";
-import Menu from "../../components/Menu";
 
 export default function Search() {
 
@@ -57,7 +56,6 @@ export default function Search() {
   return (
     <>
       <Container>
-        <Menu />
 
         <Form className="d-flex">
           <FormControl

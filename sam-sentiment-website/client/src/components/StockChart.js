@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import apiHelper from "../api/apiHelper";
+import Spinner from "../components/Spinner";
 
 ChartJS.register(
   CategoryScale,
@@ -24,15 +25,29 @@ ChartJS.register(
   Legend
 );
 
-export default function StockChart({ data, symbol, name }) {
+export default function StockChart({ symbol }) {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
-    (async () => {
 
-      let list = (data) ?  data : await apiHelper.getQuote(symbol);
-      let labels = list.history.map((item) => item.date);
-      let prices = list.history.map((item) => item.close);
+    const fetchData = async () => {
+      console.log("Fetching data");
+      let json = await apiHelper.getQuote(symbol);
+      if (json.daily === null){
+        setTimeout(fetchData , 1000);
+        return;
+      }
+
+      let dailyList = json.daily["Time Series (Daily)"];
+      let labels = [];
+      let prices = [];
+      for (let item in dailyList){
+        labels.push(item);
+        prices.push(dailyList[item]["4. close"]);
+      }
+
+      // let labels = list.history.map((item) => item.date);
+      // let prices = list.history.map((item) => item.close);
       const chartData = {
         labels,
         datasets: [
@@ -45,8 +60,11 @@ export default function StockChart({ data, symbol, name }) {
         ],
       };
       setChartData(chartData);
-    })();
-  }, [data, symbol]);
+    };
+
+    fetchData();
+
+  }, [symbol]);
 
   const options = {
     responsive: true,
@@ -55,11 +73,13 @@ export default function StockChart({ data, symbol, name }) {
         position: "top",
       },
       title: {
-        display: (name) ,
-        text: name,
+        display: false,
+        text: "N/A"
       },
     },
   };
+
+  if (chartData === null) return <Spinner/>
 
   return chartData ? <Line options={options} data={chartData} /> : <>Loading</>;
 }

@@ -1,15 +1,10 @@
 import apiConfig from "./apiConfig";
 
-const getHeader = (token) => {
+const getHeader = () => {
   var myHeaders = new Headers();
   myHeaders.set("Accept", "application/json");
   myHeaders.set("Content-Type", "application/json");
   myHeaders.set("Cache-Control", "no-cache");
-
-  if (token != null) {
-    myHeaders.set("Authorization", `Bearer ${token}`);
-  }
-
   return myHeaders;
 };
 
