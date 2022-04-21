@@ -37,7 +37,7 @@ class ApiGatewayHelper {
     let symbol = this._extractSymbol(message);
     if (symbol === null) {
       console.log(`Receiving unexpected message ${message}`);
-      return;
+      return false;
     }
 
     let connectionIds = await this._getSubscription(symbol);
@@ -51,10 +51,12 @@ class ApiGatewayHelper {
         .promise();
       }
       catch (ex){
+        console.log(ex);
         console.log(`Connection close, please cleanup  : ${connectionId}`);
       }
-
     }
+
+    return connectionIds.length > 0;
   };
 
   /**

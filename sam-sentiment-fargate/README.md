@@ -1,14 +1,18 @@
 
 [Link](https://medium.com/@arliber/aws-fargate-from-start-to-finish-for-a-nodejs-app-9a0e5fbf6361)
 
+# Sam Build to create basic 
+sam build
+sam deploy --stack-name sam-fargate
+
 # Prepare Docker
 docker build -t my_ecr .
 
 # Test Docker
 docker run -it -p 80:80 my_ecr
 
-aws ecr create-repository --repository-name my_ecr 
-aws ecr describe-repositories --repository-names my_ecr | jq -r '. | .repositories[0].repositoryUri' 
+<!-- aws ecr create-repository --repository-name my_ecr 
+aws ecr describe-repositories --repository-names my_ecr | jq -r '. | .repositories[0].repositoryUri'  -->
 
 <!-- aws ecr create-cluster  --cluster-name MyCluster -->
 
@@ -24,28 +28,24 @@ aws ecr describe-repositories --repository-names my_ecr | jq -r '. | .repositori
 <!-- aws ecs register-task-definition --cli-input-json file://skeleton.json -->
 
 # Create ECR via Console
-aws ecr create-repository --repository-name my_ecr 
 ACCOUNT_ID=`aws sts get-caller-identity  | jq .Account -r`
-ECR_IMAGE_URL=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/my_ecr:latest
+ECR_URL=$ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+ECR_IMAGE_URL=$ECR_URL/sam-sentiment-fargate-ecr:latest
+echo $ECR_IMAGE_URL
 
 # Push the Docker image  (Copy from the AWS ECR Console)
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
-docker build -t my_ecr .
-docker tag my_ecr:latest $ECR_IMAGE_URL
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_URL
+docker build -t sam-sentiment-fargate .
+docker tag sam-sentiment-fargate:latest $ECR_IMAGE_URL
 docker push $ECR_IMAGE_URL
 
-aws s3 mb s3://sam-fargate-stack 
-sam build
-sam deploy --stack-name sam-fargate --parameter-overrides ECRImageURL=$ECR_IMAGE_URL
---guided 
-
+# Getting Information
+## Subnet
 aws ec2 describe-subnets | jq '.Subnets[] |  .SubnetId' -r
+## Security Group
 SECURITY_GROUP=`aws ec2 describe-security-groups | jq '.SecurityGroups[0].GroupId' -r`
-
-
-# Domain Name
+## Domain Name
 aws cloudfront list-distributions | jq '.DistributionList.Items[0].DomainName' -r
 aws cloudfront list-distributions | jq '.DistributionList.Items[0].Id' -r
-
-# Export 
+## Export Fargate Task Information
 aws ecs describe-task-definition --task-definition MyargateTask:1

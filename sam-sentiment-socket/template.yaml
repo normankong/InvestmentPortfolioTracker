@@ -59,44 +59,6 @@ Resources:
       Queues:
         - Ref: SentimentSubscriptionQueue
 
-  # # Define SNS to SQS Policy
-  # SnsToSqsPolicy:
-  #   Type: AWS::SQS::QueuePolicy      
-  #   Properties:    
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: "Allow SNS publish to SQS"
-  #           Effect: Allow
-  #           Principal: 
-  #             Service: "sns.amazonaws.com"
-  #           Resource: !GetAtt SentimentAnalysisQueue.Arn
-  #           Action: SQS:SendMessage
-  #           Condition:
-  #             ArnEquals:
-  #               aws:SourceArn: !Ref SentimentAnalysisTopic
-  #     Queues:
-  #       - Ref: SentimentAnalysisQueue
-
-  # # Define Lambda to SQS Policy
-  # LambdaToSqsPolicy:
-  #   Type: AWS::SQS::QueuePolicy      
-  #   Properties:    
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: "Allow Lambda publish to SQS"
-  #           Effect: Allow
-  #           Principal: 
-  #             Service: "sns.amazonaws.com"
-  #           Resource: !GetAtt SentimentSubscriptionQueue.Arn
-  #           Action: SQS:SendMessage
-  #           Condition:
-  #             ArnEquals:
-  #               aws:SourceArn: !Ref SendMessageFunction
-  #     Queues:
-  #       - Ref: SentimentSubscriptionQueue
-
   SentimentWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -258,7 +220,6 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Select [1, !Split ['/', !GetAtt ConnectionsTable.Arn]]
-          # QUEUE_URL : !Ref SentimentSubscriptionQueue
           TOPIC: !Ref SentimentSubscriptionTopic
       Policies:
         - AmazonSNSFullAccess
@@ -281,20 +242,13 @@ Resources:
       Principal: apigateway.amazonaws.com
 
 Outputs:
-  # OnConnectFunctionArn:
-  #   Description: "OnConnect function ARN"
-  #   Value: !GetAtt OnConnectFunction.Arn
 
-  # OnDisconnectFunctionArn:
-  #   Description: "OnDisconnect function ARN"
-  #   Value: !GetAtt OnDisconnectFunction.Arn
-
-  # SendMessageFunctionArn:
-  #   Description: "SendMessage function ARN"
-  #   Value: !GetAtt SendMessageFunction.Arn
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for sending message"
+    Value: !Join [ '', [ 'https://', !Ref SentimentWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
 
   WebSocketURI:
-    Description: "The WSS Protocol URI to connect to"
+    Description: "The WSS Protocol URI to connect"
     Value: !Join [ '', [ 'wss://', !Ref SentimentWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
 
   ConnectionsTableArn:

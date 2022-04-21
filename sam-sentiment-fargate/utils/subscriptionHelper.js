@@ -3,11 +3,11 @@
 require("dotenv").config();
 const AWS = require("aws-sdk");
 
-AWS.config.update({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+// AWS.config.update({
+//   accessKeyId: process.env.ACCESS_KEY_ID,
+//   secretAccessKey: process.env.SECRET_ACCESS_KEY,
+//   region: process.env.AWS_REGION,
+// });
 
 // Create an SQS service object
 var sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
@@ -20,7 +20,6 @@ const ddb = new AWS.DynamoDB.DocumentClient({
 const TABLE_NAME = process.env.TABLE_NAME;
 
 class SubscriptionHelper {
-
   finhubHelper = null;
 
   /**
@@ -30,11 +29,14 @@ class SubscriptionHelper {
     console.log(`Initial SubscriptionHelper`);
     this.finhubHelper = finhubHelper;
 
+    // Start the SNS Listener
     setTimeout(this._listen, 1000);
+
+    // Initialize Subscription
+    setTimeout(this._initializeSubscription, 3000);
   }
 
-  _listen = async() => {
-
+  _listen = async () => {
     let _self = this;
 
     let params = {
@@ -50,52 +52,62 @@ class SubscriptionHelper {
       if (err) {
         console.log("Receive Error", err);
       } else if (data.Messages) {
+        // Acknowledge the message
+        _self._acknowledgeMessage(data);
 
         // Extract Symbols from DB
         let symbols = await _self._getSubscription();
-        console.log(`Pending to subscribe symbols : ${symbols.length}`)
+        console.log(`Pending to subscribe symbols : ${symbols.length}`);
 
-        _self._cleanup(data);
-
-        _self.finhubHelper.reSubscribeSymbol(symbols)
+        // Subscribe Symbols
+        _self.finhubHelper.reSubscribeSymbol(symbols);
       }
 
       setTimeout(_self._listen, 1000);
     });
-  }
-
+  };
 
   /**
    * Get Subscription
    */
-    _getSubscription = async () => {
-      
-      let result = await ddb
-        .scan({
-          TableName: TABLE_NAME,
-          ProjectionExpression: "symbol",
-        })
-        .promise();
+  _getSubscription = async () => {
+    let result = await ddb
+      .scan({
+        TableName: TABLE_NAME,
+        ProjectionExpression: "symbol",
+      })
+      .promise();
 
-      if (result.Items === undefined) return [];
-      return result.Items.map(x => x.symbol);
-    };
+    if (result.Items === undefined) return [];
+    return result.Items.map((x) => x.symbol);
+  };
 
-
-    /**
-     * Cleanup the message
-     */
-    _cleanup = async (data) => {
-      for (let msg of data.Messages) {
-        console.log(`Received message ${msg.MessageId} - ${msg.Body}`);
-        var deleteParams = {
-          QueueUrl: QUEUE_URL,
-          ReceiptHandle: msg.ReceiptHandle,
-        };
-        await sqs.deleteMessage(deleteParams).promise();
-        // console.log(`Deleted message ${msg.MessageId}`);
-        }
+  /**
+   * Acknowledge the message
+   */
+  _acknowledgeMessage = async (data) => {
+    for (let msg of data.Messages) {
+      console.log(`Received message ${msg.MessageId} - ${msg.Body}`);
+      var deleteParams = {
+        QueueUrl: QUEUE_URL,
+        ReceiptHandle: msg.ReceiptHandle,
+      };
+      await sqs.deleteMessage(deleteParams).promise();
+      // console.log(`Deleted message ${msg.MessageId}`);
     }
-};
+  };
+
+  /**
+   * Initialize Subscription
+   */
+  _initializeSubscription = async () => {
+    // Extract Symbols from DB
+    let symbols = await this._getSubscription();
+    console.log(`Loading subscription list from DB : ${symbols.length}`);
+
+    // Subscribe Symbols
+    this.finhubHelper.reSubscribeSymbol(symbols);
+  };
+}
 
 module.exports = SubscriptionHelper;

@@ -1,0 +1,50 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "execute-api:ManageConnections"
+            ],
+            "Resource": [
+                "arn:aws:execute-api:us-east-1:325483233520:bci570m5k0/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Sid": "ListAndDescribe",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:List*",
+                "dynamodb:DescribeReservedCapacity*",
+                "dynamodb:DescribeLimits",
+                "dynamodb:DescribeTimeToLive"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:325483233520:table/sam-sentiment-socket-ConnectionsTable-14DXK8NOSDS6B"
+        },
+        {
+            "Sid": "SpecificTable",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchGet*",
+                "dynamodb:DescribeStream",
+                "dynamodb:DescribeTable",
+                "dynamodb:Get*",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:BatchWrite*",
+                "dynamodb:CreateTable",
+                "dynamodb:Delete*",
+                "dynamodb:Update*",
+                "dynamodb:PutItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-east-1:325483233520:table/sam-sentiment-socket-ConnectionsTable-14DXK8NOSDS6B"
+        },
+        {
+            "Action": [
+                "sqs:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:sqs:us-east-1:325483233520:sam-sentiment-socket"
+        }
+    ]
+}

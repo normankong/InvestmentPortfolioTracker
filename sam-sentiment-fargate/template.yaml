@@ -14,22 +14,26 @@ Metadata:
    ParameterGroups:
      - Label: {default: 'Optional parameters'}
        Parameters:
-         - ECRImageURL
+         - ProjectName
 
 Parameters:
   ProjectName:
     Type: String
     Description: 'Name of the project'
     Default: 'sam-sentiment-fargate'
-  ECRImageURL:
-    Type: String
-    Description: 'ECR Image URL'
 
 Resources:
 
+  SentimentECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${ProjectName}-ecr'
+
   # Create the ECS Cluster
-  ECSFargateCluster:
+  SentimentECSCluster:
     Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: !Sub '${ProjectName}-cluster'
 
   # Create the ECS Service task definition. 
   # ECSServiceTaskDefinition:
@@ -41,8 +45,6 @@ Resources:
   #         Name: web
   #         PortMappings:
   #           - ContainerPort: 80
-  #             Protocol: tcp
-  #           - ContainerPort: 10001
   #             Protocol: tcp
   #     Cpu: '512'
   #     ExecutionRoleArn: !GetAtt 
@@ -68,6 +70,7 @@ Resources:
   #             Service: ecs-tasks.amazonaws.com
   #       Version: 2012-10-17
   # AmazonECSTaskExecutionRolePolicy
+  
   # ECS Task Role
   ECSTaskRole:
     Type: 'AWS::IAM::Role'
@@ -79,7 +82,6 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
         Version: 2012-10-17
-
 
 
   # # Create ECS Service
@@ -113,3 +115,11 @@ Resources:
   #   Env2SecurityGroups:
   #     '096961528614':
   #       securitygroup: 'sg-0d68a1c6c8a6bea28'
+
+Outputs:
+  ECRRepositoryURL:
+    Description: "The ECR Repository URL"
+    Value: !GetAtt SentimentECRRepository.Arn
+  AccountID:
+    Description: "The Image URL"
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com'

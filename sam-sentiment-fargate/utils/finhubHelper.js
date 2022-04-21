@@ -8,6 +8,8 @@ class FinHubHelper {
 
   // Constructor
   constructor(helper) {
+    let _self = this;
+
     this.socket = new WebSocket(
       "wss://ws.finnhub.io?token=c9a7gr2ad3icvte9htig"
     );
@@ -18,11 +20,22 @@ class FinHubHelper {
     });
 
     // Listen for messages
-    this.socket.addEventListener("message", function (event) {
+    this.socket.addEventListener("message", async function (event) {
       let node = JSON.parse(event.data);
-      console.log(`Receiving Information ...`);
-      helper.broadcasting(node);
-    });
+
+      let symbol = _self._extractSymbol(node);
+      if (symbol === null) {
+        console.log(`Receiving non symbol message from finhub, ignoring`);
+        return;
+      }
+
+      console.log(`Receiving ${symbol} from finhub`);
+      let isSubscribed = await helper.broadcasting(node)
+        if (!isSubscribed) {
+          console.log(`No one is subscribing this ${symbol}`);
+          _self.unsubscribeSymbol(symbol);
+        }
+      });
 
     // Add Subscription Handler
     if (helper.addSubscriptionHandler) {
@@ -70,5 +83,17 @@ class FinHubHelper {
       this.unsubscribeSymbol(symbol);
     }
   }
+
+
+  /**
+   * Extract the Symbol from the message
+   */
+   _extractSymbol = (message) => {
+    try {
+      return message.data[0].s;
+    } catch (ex) {
+      return null;
+    }
+  };
 }
 module.exports = FinHubHelper;
