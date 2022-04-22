@@ -6,7 +6,7 @@
                 "execute-api:ManageConnections"
             ],
             "Resource": [
-                "arn:aws:execute-api:us-east-1:325483233520:bci570m5k0/*"
+                "arn:aws:execute-api:us-east-1:493321763661:499snit1zd/*"
             ],
             "Effect": "Allow"
         },
@@ -19,7 +19,7 @@
                 "dynamodb:DescribeLimits",
                 "dynamodb:DescribeTimeToLive"
             ],
-            "Resource": "arn:aws:dynamodb:us-east-1:325483233520:table/sam-sentiment-socket-ConnectionsTable-14DXK8NOSDS6B"
+            "Resource": "arn:aws:dynamodb:us-east-1:493321763661:table/sam-sentiment-socket-ConnectionsTable-1FJWLRBNJKP0"
         },
         {
             "Sid": "SpecificTable",
@@ -37,14 +37,14 @@
                 "dynamodb:Update*",
                 "dynamodb:PutItem"
             ],
-            "Resource": "arn:aws:dynamodb:us-east-1:325483233520:table/sam-sentiment-socket-ConnectionsTable-14DXK8NOSDS6B"
+            "Resource": "arn:aws:dynamodb:us-east-1:493321763661:table/sam-sentiment-socket-ConnectionsTable-1FJWLRBNJKP0"
         },
         {
             "Action": [
                 "sqs:*"
             ],
             "Effect": "Allow",
-            "Resource": "arn:aws:sqs:us-east-1:325483233520:sam-sentiment-socket"
+            "Resource": "arn:aws:sqs:us-east-1:493321763661:sam-sentiment-socket"
         }
     ]
 }
