@@ -33,7 +33,7 @@ export default function StockChart({ symbol }) {
     const fetchData = async () => {
       console.log("Fetching data");
       let json = await apiHelper.getQuote(symbol);
-      if (json.daily === null){
+      if (!json.daily){
         setTimeout(fetchData , 1000);
         return;
       }

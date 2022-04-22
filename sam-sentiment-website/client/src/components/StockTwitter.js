@@ -16,7 +16,7 @@ export default function StockTwitter({ symbol }) {
     const fetchData = async () => {
       console.log("Fetching data");
       let json = await apiHelper.getQuote(symbol);
-      if (json.twitter === null) {
+      if (!json.twitter) {
         setTimeout(fetchData, 1000);
         return;
       }
@@ -34,7 +34,7 @@ export default function StockTwitter({ symbol }) {
     fetchData();
   }, [symbol]);
 
-  if (list === null) return <Spinner />;
+  if (list.length === 0) return <Spinner />;
 
   let LIMIT = 250;
   return (

@@ -22,7 +22,10 @@ export default function StockFeed({ symbol }) {
 
   // Subscription
   useEffect(() => {
+
+    if (symbol === "COIN") symbol = "BINANCE:BTCUSDT";
     let request = { action: "sendmessage", symbol };
+    
     sendMessage(`${JSON.stringify(request)}`);
   }, [symbol]);
 

@@ -23,6 +23,7 @@ exports.handler = async (event) => {
   if (/^[a-zA-Z]{1,4}$/.test(symbol) === false) {
     const response = {
       statusCode: 403,
+      headers : getHeaders(),
       body: "Invalid Stock Symbol",
     };
     return response;
@@ -58,6 +59,7 @@ exports.handler = async (event) => {
 
   const response = {
     statusCode: 200,
+    headers : getHeaders(),
     body: JSON.stringify(item),
   };
 
@@ -88,3 +90,11 @@ const deleteRecord = async (symbol) => {
     })
     .promise();
 };
+
+const getHeaders = () => {
+  return {
+    "Access-Control-Allow-Headers" : "Content-Type",
+    "Access-Control-Allow-Origin": "*", // Allow from anywhere 
+    "Access-Control-Allow-Methods": "GET" // Allow only GET request 
+  }
+}

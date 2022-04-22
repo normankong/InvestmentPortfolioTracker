@@ -15,7 +15,7 @@ export default function StockTable({ symbol }) {
     const fetchData = async () => {
       console.log("Fetching data");
       let json = await apiHelper.getQuote(symbol);
-      if (json.quote === null){
+      if (!json.quote){
         setTimeout(fetchData , 1000);
         return;
       }
@@ -32,7 +32,7 @@ export default function StockTable({ symbol }) {
 
   }, [symbol]);
 
-  if (list === null) return <Spinner/>
+  if (list.length === 0) return <Spinner/>
 
   return <SimpleTable list={list} />;
 }
