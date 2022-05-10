@@ -1,5 +1,7 @@
 "use strict";
 
+require("dotenv").config();
+
 const WebSocket = require("ws");
 
 class FinHubHelper {
@@ -11,7 +13,7 @@ class FinHubHelper {
     let _self = this;
 
     this.socket = new WebSocket(
-      "wss://ws.finnhub.io?token=c9a7gr2ad3icvte9htig"
+      `wss://ws.finnhub.io?token=${process.env.FINHUB_APIKEY}`
     );
 
     // Connection opened -> Subscribe
